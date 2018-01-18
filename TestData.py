@@ -22,11 +22,11 @@ def graph(X, NodePositions, nNodes, partition=None, col=None, size=5):
             A[i] = X[partition[:, 0] == i]
             plt.plot(*zip(*A[i]), marker='.', ls='',
                      color=col[i % np.size(col)])
-    plt.plot(*zip(*NodePositions), marker='o', color='r')
+    plt.plot(*zip(*NodePositions), marker='o', color='r', ls='')
 
 
 def uniformRandom():
-    nData = 10000
+    nData = 1000
     dim = 2
     nNodes = 12
     X = sp.rand(nData, dim)
@@ -73,8 +73,9 @@ def line2Data(filename, dispPrev=False):
     if dispPrev:
         graph(X, NodePositions, ElasticMatrix.shape[0])
     EmbeddedNodePositions, ElasticEnergy, partition, dists, MSE, EP, RP = (
-            PrimitiveElasticGraphEmbedment(X, NodePositions, ElasticMatrix))
+            PrimitiveElasticGraphEmbedment(X, NodePositions, ElasticMatrix,
+                                           verbose=True))
     return X, EmbeddedNodePositions, ElasticMatrix.shape[0], partition
 
 
-graph(*line2Data("tree23.data", True), col=['b'])
+# graph(*line2Data("tree23.data", True), col=['b'])
