@@ -2,7 +2,7 @@
 """
 Created on Mon Jan  8 13:52:31 2018
 
-@author:
+@author: Alexis Martin
 """
 import numpy as np
 import scipy as sp
@@ -11,6 +11,43 @@ import ComputePrimitiveGraphElasticEnergy as CG
 from PartitionData import PartitionData
 
 
+# This is the core function for fitting a primitive elastic graph to the data
+# Inputs
+#   X - is the n-by-m data matrix. Each row corresponds to one data point.
+#   NodePositions - is k-by-m matrix of positions of the graph nodes in the
+#       same space as X.
+#   ElasticMatrix - k-by-k symmetric matrix describing the connectivity and
+#       the elastic properties of the graph. Star elasticities (mu
+#       coefficients) are presented on the main diagonal (non-zero entries
+#       only for star centers), and the edge elasticity moduli are
+#       presented out of diagonal.
+#   varargin contains Name, Value pairs. Names can be:
+#   'MaxNumberOfIterations' with integer number which is maximum number of
+#       iterations for EM algorithm.
+#   'eps' with real number which is minimal relative change in the node
+#       positions to be considered the graph embedded (convergence criteria)
+#   'PointWeights' with n-by-1 vector of data point weights
+#   'MaxBlockSize' with integer number which is maximum size of the block
+#       of the distance matrix when partition the data. This means that
+#       maximal size of distance matrix is MaxBlockSize-by-k where k is
+#       number of nodes.
+#   'verbose' with 1/0 is to display/hide the energy values at each
+#       iteration and in the end of the process.
+#   'TrimmingRadius' is trimming radius, a parameter required for robust
+#       principal graphs
+# see: github.com/auranic/Elastic-principal-graphs/wiki/Robust-principal-graphs
+#   'SquaredX' with n-by-1 vector of squared length of data vectors.
+#
+# Outputs
+#   EmbeddedNodePositions is positions of empbedded nodes
+#   ElasticEnergy is total elastic energy
+#   partition is n-by-1 vector. partition(i) is number of node which is
+#       associated with data point X(i,:).
+#   dists is array of squared distances form each data point to nerest
+#       node.
+#   MSE is mean square error of data approximation.
+#   EP is edge potential
+#   RP is harmonicity potential
 def PrimitiveElasticGraphEmbedment(X, NodePositions, ElasticMatrix,
                                    MaxNumberOfIterations=10, eps=0.01,
                                    PointWeights=None, MaxBlockSize=100000,
@@ -19,10 +56,11 @@ def PrimitiveElasticGraphEmbedment(X, NodePositions, ElasticMatrix,
     N = X.shape[0]
     if PointWeights is None:
         PointWeights = np.ones((N, 1))
-    partition = []
+    # Auxiliary computations
     SpringLaplacianMatrix = ComputeSpringLaplacianMatrix(ElasticMatrix)
     if SquaredX is None:
         SquaredX = (X**2).sum(axis=1).reshape((N, 1))
+    # Main iterative EM cycle: partition, fit given the partition, repeat
     for i in range(MaxNumberOfIterations):
         if verbose:
             partition, dists = PartitionData(X, NodePositions, MaxBlockSize,
@@ -54,17 +92,30 @@ def PrimitiveElasticGraphEmbedment(X, NodePositions, ElasticMatrix,
             MSE, EP, RP)
 
 
+# Transforms the ElasticMatrix into the SpringLaplacianMatrix ready
+# to be used in the SLAU solving
 def ComputeSpringLaplacianMatrix(ElasticMatrix):
-    E = sp.sparse.csgraph.laplacian(ElasticMatrix)
-    NumberOfNodes = np.size(ElasticMatrix, axis=0)
+    NumberOfNodes = ElasticMatrix.shape[0]
+    # first, make the vector of mu coefficients
     Mu = ElasticMatrix.diagonal()
-    Lambda = ElasticMatrix.copy()
-    np.fill_diagonal(Lambda, 0)
+    # create the matrix with edge elasticity moduli at non-diagonal elements
+    Lambda = ElasticMatrix - np.diag(Mu)
+    # Diagonal matrix of edge elasticities
+    LambdaSums = Lambda.sum(axis=0)
+    # E matrix (contribution from edges) is simply weighted Laplacian
+    E = np.diag(LambdaSums) - Lambda
+    # matrix S (contribution from stars) is composed of Laplacian for
+    # positive strings (star edges) with elasticities mu/k, where k is the
+    # order of the star, and Laplacian for negative strings with
+    # elasticities -mu/k^2. Negative springs connect all star leafs in a
+    # clique.
     StarCenterIndices = np.nonzero(Mu > 0)[0]
     S = np.zeros((NumberOfNodes, NumberOfNodes))
     for i in range(np.size(StarCenterIndices)):
         Spart = np.zeros((NumberOfNodes, NumberOfNodes))
+        # leaves indices
         leaves = Lambda.take(StarCenterIndices[i], axis=1) > 0
+        # order of the star
         K = leaves.sum()
         Spart[StarCenterIndices[i], StarCenterIndices[i]] = (
                 Mu[StarCenterIndices[i]])
@@ -78,14 +129,31 @@ def ComputeSpringLaplacianMatrix(ElasticMatrix):
     return E + S
 
 
+# ComputeWeightedAverage calculate NodeClusterCentres as weighted averages
+# of points from matrix X.
+#
+# Inputs
+#    X is n-by-m matrix of data points where each row corresponds to one
+#        observation.
+#    partition is n-by-1 (column) vector of node numbers. This vector
+#        associate data points with Nodes.
+#    PointWeights is n-by-1 (column) vector of point weights.
+#    NumberOfNodes is number of nodes to calculate means.
+#
+# Important! if there is no point associated with node then coordinates of
+# this node centroid are zero.
 def ComputeWeightedAverage(X, partition, PointWeights, NumberOfNodes):
     X = X * PointWeights
+    # Auxiliary calculations
     M = X.shape[1]
-    TotalWeight = PointWeights.sum()
     part = partition.ravel() + 1
+    # Calculate total weights
+    TotalWeight = PointWeights.sum()
+    # Calculate weights for Relative size
     tmp = np.bincount(part, weights=PointWeights.ravel(),
                       minlength=NumberOfNodes+1)
     NodeClusterRelativeSize = tmp[1:] / TotalWeight
+    # To prevent dividing by 0
     tmp[tmp == 0] = 1
     NodeClusterCenters = np.zeros((NumberOfNodes + 1, X.shape[1]))
     for k in range(M):
@@ -94,6 +162,7 @@ def ComputeWeightedAverage(X, partition, PointWeights, NumberOfNodes):
     return (NodeClusterCenters[1:, ], NodeClusterRelativeSize[np.newaxis].T)
 
 
+# Solves the SLAU to find new node positions
 def FitGraph2DataGivenPartition(X, PointWeights, SpringLaplacianMatrix,
                                 partition):
     NumberOfNodes = np.size(SpringLaplacianMatrix, axis=0)
