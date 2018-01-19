@@ -5,9 +5,6 @@ Created on Wed Jan 17 14:26:31 2018
 @author:
 """
 import numpy as np
-from PartitionData import PartitionData
-import scipy as sp
-import matplotlib.pyplot as plt
 
 
 def GraphGrammarOperation(X, NodePositions, ElasticMatrix, partition, Type):
@@ -16,20 +13,16 @@ def GraphGrammarOperation(X, NodePositions, ElasticMatrix, partition, Type):
     elif Type == "removenode":
         return RemoveNode(NodePositions, ElasticMatrix)
     elif Type == "bisectedge":
-        return Type
+        return BisectEdge(NodePositions, ElasticMatrix)
     elif Type == "shrinkedge":
-        return Type
+        return ShrinkEdge(NodePositions, ElasticMatrix)
     else:
         raise ValueError("Operation " + Type + " is not defined")
 
 
 # TODO add pointweights ?
-# OK in theory
 def AddNode2Node(X, NodePositions, ElasticMatrix, partition):
     nNodes = NodePositions.shape[0]
-    NodePositionsArray = np.zeros((nNodes+1, NodePositions.shape[1], nNodes))
-    ElasticMatrices = np.zeros((nNodes+1, nNodes+1, nNodes))
-    NodeIndicesArray = np.zeros((nNodes+1, nNodes))
     Mus = ElasticMatrix.diagonal()
     Lambda = ElasticMatrix.copy()
     np.fill_diagonal(Lambda, 0)
@@ -42,12 +35,12 @@ def AddNode2Node(X, NodePositions, ElasticMatrix, partition):
                         np.zeros((1, nNodes+1))))
     niProt = np.arange(nNodes+1)
     niProt[nNodes] = 0
+    NodePositionsArray = np.repeat(npProt[:, :, np.newaxis], nNodes, axis=2)
+    ElasticMatrices = np.repeat(emProt[:, :, np.newaxis], nNodes, axis=2)
+    NodeIndicesArray = np.repeat(niProt[:, np.newaxis], nNodes, axis=1)
 
     for i in range(nNodes):
         meanL = Lambda[i, indL[i, ]].mean(axis=0)
-        NodePositionsArray[:, :, i] = npProt
-        ElasticMatrices[:, :, i] = emProt
-        NodeIndicesArray[:, i] = niProt
         ElasticMatrices[nNodes, i, i] = ElasticMatrices[i, nNodes, i] = meanL
         if Connectivities[i] == 1:
             ineighbour = np.nonzero(indL[i, ])[0]
@@ -85,39 +78,66 @@ def RemoveNode(NodePositions, ElasticMatrix):
     return NodePositionsArray, ElasticMatrices, NodeIndicesArray
 
 
-def printMatrices(ElasticMatrices, ElasticMatrix=None):
-    if ElasticMatrix is not None:
-        print("Start : ")
-        ElasticMatrix[np.diag(ElasticMatrix.diagonal() > 0)] = 0.2
-        plt.imshow(ElasticMatrix)
-        plt.show()
-    for i in range(ElasticMatrices.shape[2]):
-        ElasticMatrices[np.diag(ElasticMatrices[:, :, i].diagonal() > 0),
-                        i] = 0.2
-        plt.imshow(ElasticMatrices[:, :, i])
-        plt.show()
+def BisectEdge(NodePositions, ElasticMatrix):
+    Mus = ElasticMatrix.diagonal()
+    start, stop = np.triu(ElasticMatrix, 1).nonzero()
+    nGraphs = start.shape[0]
+    nNodes = NodePositions.shape[0]
+    npProt = np.vstack((NodePositions, np.zeros((1, NodePositions.shape[1]))))
+    emProt = np.vstack((np.hstack((ElasticMatrix, np.zeros((nNodes, 1)))),
+                        np.zeros((1, nNodes+1))))
+    niProt = np.arange(nNodes+1)
+    niProt[nNodes] = 0
+    NodePositionsArray = np.repeat(npProt[:, :, np.newaxis], nGraphs, axis=2)
+    ElasticMatrices = np.repeat(emProt[:, :, np.newaxis], nGraphs, axis=2)
+    NodeIndicesArray = np.repeat(niProt[:, np.newaxis], nGraphs, axis=1)
+    for i in range(nGraphs):
+        NewNodePosition = (NodePositions[start[i], ] +
+                           NodePositions[stop[i], ]) / 2
+        NodePositionsArray[nNodes, :, i] = NewNodePosition
+        Lambda = ElasticMatrix[start[i], stop[i]]
+        ElasticMatrices[start[i], stop[i], i] = 0
+        ElasticMatrices[stop[i], start[i], i] = 0
+        ElasticMatrices[start[i], nNodes, i] = Lambda
+        ElasticMatrices[nNodes, start[i], i] = Lambda
+        ElasticMatrices[nNodes, stop[i], i] = Lambda
+        ElasticMatrices[stop[i], nNodes, i] = Lambda
+        mu1 = Mus[start[i]]
+        mu2 = Mus[stop[i]]
+        if mu1 > 0 and mu2 > 0:
+            ElasticMatrices[nNodes, nNodes, i] = (mu1 + mu2) / 2
+        else:
+            ElasticMatrices[nNodes, nNodes, i] = max(mu1, mu2)
+    return NodePositionsArray, ElasticMatrices, NodeIndicesArray
 
 
-nData = 1000
-dim = 2
-nNodes = 12
-X = sp.rand(nData, dim)
-ind = np.random.choice(nData, nNodes)
-NodePositions = X[ind, ]
-ElasticMatrix = np.array([[0, 0, 0.1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-                          [0, 0, 0.1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-                          [0.1, 0.1, 0.01, 0, 0, 0, 0, 0.1, 0, 0, 0, 0],
-                          [0, 0, 0, 0, 0, 0.1, 0, 0, 0, 0, 0, 0],
-                          [0, 0, 0, 0, 0, 0.1, 0, 0, 0, 0, 0, 0],
-                          [0, 0, 0, 0.1, 0.1, 0.01, 0.1, 0.1, 0, 0, 0, 0],
-                          [0, 0, 0, 0, 0, 0.1, 0, 0, 0, 0, 0, 0],
-                          [0, 0, 0.1, 0, 0, 0.1, 0, 0.01, 0, 0, 0, 0],
-                          [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.1, 0],
-                          [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.1, 0],
-                          [0, 0, 0, 0, 0, 0, 0, 0, 0.1, 0.1, 0.01, 0.1],
-                          [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.1, 0.0]])
-XSquared = np.ndarray.reshape((X**2).sum(axis=1), (nData, 1))
-part, dists = PartitionData(X, NodePositions, 100000, XSquared)
-
-print(GraphGrammarOperation(
-        X, NodePositions, ElasticMatrix, part, "removenode"))
+def ShrinkEdge(NodePositions, ElasticMatrix):
+    Mus = ElasticMatrix.diagonal()
+    Lambda = ElasticMatrix.copy()
+    np.fill_diagonal(Lambda, 0)
+    Connectivities = (Lambda > 0).sum(axis=0)
+    start, stop = np.triu(ElasticMatrix, 1).nonzero()
+    nNodes = NodePositions.shape[0]
+    ind = np.min(np.hstack((Connectivities[start[np.newaxis].T],
+                            Connectivities[stop[np.newaxis].T])), axis=1)
+    ind = ind > 1
+    start = start[ind]
+    stop = stop[ind]
+    nGraphs = start.shape[0]
+    NodePositionsArray = np.zeros((nNodes-1, NodePositions.shape[1], nGraphs))
+    ElasticMatrices = np.zeros((nNodes-1, nNodes-1, nGraphs))
+    NodeIndicesArray = np.zeros((nNodes-1, nGraphs))
+    for i in range(stop.shape[0]):
+        em = ElasticMatrix.copy()
+        em[start[i], ] = np.maximum(Lambda[start[i], ], Lambda[stop[i], ])
+        em[:, start[i]] = np.maximum(Lambda[:, start[i]], Lambda[:, stop[i]])
+        em[start[i], start[i]] = (Mus[start[i]] + Mus[stop[i]]) / 2
+        nodep = NodePositions.copy()
+        nodep[start[i], :] = (nodep[start[i], :] + nodep[stop[i], :]) / 2
+        newInds = np.concatenate((np.arange(0, stop[i]),
+                                 np.arange(stop[i]+1, nNodes)))
+        NodePositionsArray[:, :, i] = nodep[newInds, ]
+        ElasticMatrices[:, :, i] = em.take(newInds, axis=0).take(newInds,
+                                                                 axis=1)
+        NodeIndicesArray[:, i] = newInds
+    return NodePositionsArray, ElasticMatrices, NodeIndicesArray
