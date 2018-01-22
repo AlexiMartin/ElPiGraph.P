@@ -52,5 +52,6 @@ ElasticMatrix = np.array(
 XSquared = np.ndarray.reshape((X**2).sum(axis=1), (nData, 1))
 part, dists = PartitionData(X, NodePositions, 100000, XSquared)
 
-print(GraphGrammarOperation(
-        X, NodePositions, ElasticMatrix, part, "shrinkedge"))
+
+GraphGrammarOperation(
+        X, NodePositions, ElasticMatrix, part, "bisectedge")
