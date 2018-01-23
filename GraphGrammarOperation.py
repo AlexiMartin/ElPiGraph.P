@@ -47,9 +47,7 @@ def GraphGrammarOperation(X, NodePositions, ElasticMatrix, partition, Type):
     elif Type == "shrinkedge":
         return ShrinkEdge(NodePositions, ElasticMatrix)
     else:
-        raise ValueError("Operation " + Type + " is not defined, the correct "
-                         + "operations are : addnode2node, removenode, " +
-                         "bisectedge, and shrinkedge")
+        raise ValueError("Operation " + Type + " is not defined")
 
 
 # This grammar operation adds a node to each graph node
@@ -124,10 +122,13 @@ def RemoveNode(NodePositions, ElasticMatrix):
     k = 0
     for i in range(Connectivities.shape[0]):
         if Connectivities[i] == 1:
-            # if terminal node remove iit
+            # if terminal node remove it
             newInds = np.concatenate((np.arange(0, i), np.arange(i+1, nNodes)))
             NodePositionsArray[:, :, k] = NodePositions[newInds, :]
-            ElasticMatrices[:, :, k] = ElasticMatrix[newInds, newInds]
+            tmp = np.repeat(False, nNodes)
+            tmp[newInds] = True
+            tmp2 = ElasticMatrix[tmp, :]
+            ElasticMatrices[:, :, k] = tmp2[:, tmp]
             NodeIndicesArray[:, k] = newInds
             k += 1
     return NodePositionsArray, ElasticMatrices, NodeIndicesArray
@@ -225,7 +226,7 @@ def ShrinkEdge(NodePositions, ElasticMatrix):
         nodep = NodePositions.copy()
         # madify node start[i]
         nodep[start[i], :] = (nodep[start[i], :] + nodep[stop[i], :]) / 2
-        # Form index for retained nodes and extract corresponding part of 
+        # Form index for retained nodes and extract corresponding part of
         # node positions and elastic matrix
         newInds = np.concatenate((np.arange(0, stop[i]),
                                  np.arange(stop[i]+1, nNodes)))

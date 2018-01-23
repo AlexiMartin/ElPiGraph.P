@@ -22,7 +22,7 @@ def graph(X, NodePositions, nNodes, partition=None, col=None, size=5):
             A[i] = X[partition[:, 0] == i]
             plt.plot(*zip(*A[i]), marker='.', ls='',
                      color=col[i % np.size(col)])
-    plt.plot(*zip(*NodePositions), marker='o', color='r')
+    plt.plot(*zip(*NodePositions), marker='o', color='r', ls='')
 
 
 # Try to fit a line to given data points
@@ -57,4 +57,4 @@ def line2Data(filename, dispPrev=False):
     return X, EmbeddedNodePositions, ElasticMatrix.shape[0], partition
 
 
-graph(*line2Data("tree23.data", True), col=['b'])
+# graph(*line2Data("tree23.data", True), col=['b'])

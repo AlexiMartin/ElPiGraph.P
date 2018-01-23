@@ -5,7 +5,6 @@ Created on Mon Jan  8 13:52:31 2018
 @author: Alexis Martin
 """
 import numpy as np
-import scipy as sp
 import math
 import ComputePrimitiveGraphElasticEnergy as CG
 from PartitionData import PartitionData
