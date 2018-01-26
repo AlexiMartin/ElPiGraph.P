@@ -5,8 +5,7 @@ Created on Tue Jan  4  2018
 @author : Alexis Martin
 """
 
-import numpy
-import math
+import numpy as np
 
 
 # Partition the data by proximity to graph nodes
@@ -29,10 +28,10 @@ import math
 #   dists is n-by-1 vector. dists[i] is squared distance between the node with
 #       number partition[i] and data point X[i, ].
 def PartitionData(X, NodePositions, MaxBlockSize, SquaredX,
-                  TrimmingRadius=math.inf):
+                   TrimmingRadius=np.inf):
     n = X.shape[0]
-    partition = numpy.zeros((n, 1), dtype=int)
-    dists = numpy.zeros((n, 1))
+    partition = np.zeros((n, 1), dtype=int)
+    dists = np.zeros((n, 1))
     # Calculate squared length of centroids
     cent = NodePositions.T
     centrLength = (cent**2).sum(axis=0)
@@ -42,16 +41,13 @@ def PartitionData(X, NodePositions, MaxBlockSize, SquaredX,
         last = i+MaxBlockSize
         if last > n:
             last = n
-        # Prepare index
-        ind = numpy.arange(i, last)
         # Calculate distances
-        d = centrLength-2*numpy.dot(X[ind, ], cent)
+        d = SquaredX[i:last] + centrLength-2*np.dot(X[i:last, ], cent)
         tmp = d.argmin(axis=1)
-        partition[ind] = tmp.reshape(last-i, 1)
-        dists[ind] = d[numpy.arange(d.shape[0]), tmp].reshape(last-i, 1)
-    dists = dists + SquaredX
+        partition[i:last] = tmp[:, np.newaxis]
+        dists[i:last] = d[np.arange(d.shape[0]), tmp][:, np.newaxis]
     # Apply trimming
-    if TrimmingRadius is not math.inf:
+    if TrimmingRadius is not np.inf:
         ind = dists > TrimmingRadius
         partition[ind] = 0
         dists[ind] = TrimmingRadius
