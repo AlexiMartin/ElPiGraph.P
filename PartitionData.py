@@ -28,7 +28,7 @@ import numpy as np
 #   dists is n-by-1 vector. dists[i] is squared distance between the node with
 #       number partition[i] and data point X[i, ].
 def PartitionData(X, NodePositions, MaxBlockSize, SquaredX,
-                   TrimmingRadius=np.inf):
+                  TrimmingRadius=np.inf):
     n = X.shape[0]
     partition = np.zeros((n, 1), dtype=int)
     dists = np.zeros((n, 1))

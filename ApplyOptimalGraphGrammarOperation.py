@@ -4,7 +4,6 @@ Created on Mon Jan 22 11:02:30 2018
 
 @author: Alexis Martin
 """
-import math
 from PartitionData import PartitionData
 from GraphGrammarOperation import GraphGrammarOperation
 from PrimitiveElasticGraphEmbedment import PrimitiveElasticGraphEmbedment
@@ -14,7 +13,7 @@ import numpy as np
 # TODO add pointweights ?
 def ApplyOptimalGraphGrammarOperation(X, NodePositions, ElasticMatrix,
                                       opTypes, MaxBlockSize=100000,
-                                      verbose=False, TrimmingRadius=math.inf,
+                                      verbose=False, TrimmingRadius=np.inf,
                                       MaxNumberOfIterations=10, eps=0.01):
     TrimmingRadius = TrimmingRadius**2
     SquaredX = (X**2).sum(axis=1).reshape((X.shape[0], 1))
@@ -33,7 +32,7 @@ def ApplyOptimalGraphGrammarOperation(X, NodePositions, ElasticMatrix,
                                              ElasticMatrices), axis=2)
         NodeIndicesArrayAll = np.concatenate((NodeIndicesArrayAll,
                                               NodeIndicesArray), axis=1)
-    minEnergy = math.inf
+    minEnergy = np.inf
     for i in range(NodeIndicesArrayAll.shape[1]):
         EM = ElasticMatricesAll[:, :, i]
         Mus = EM.diagonal().copy()

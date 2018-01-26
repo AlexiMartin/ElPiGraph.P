@@ -5,7 +5,7 @@ Created on Thu Jan  4 14:01:02 2018
 @author : Alexis Martin
 """
 import scipy
-import numpy
+import numpy as np
 import time
 import PartitionData as part
 import matplotlib.pyplot as plt
@@ -16,16 +16,17 @@ dim = 100
 nNodes = 50
 X = scipy.rand(nData, dim)
 # print("X created")
-ind = numpy.random.choice(nData, nNodes)
+ind = np.random.choice(nData, nNodes)
 # print("ind created")
 NodePositions = X[ind, ]
 # print("NodePositions created")
-XSquared = numpy.ndarray.reshape((X**2).sum(axis=1), (nData, 1))
+XSquared = np.ndarray.reshape((X**2).sum(axis=1), (nData, 1))
 # print("XSquared created")
 print("Start")
 t = time.time()
 partition, dists = part.PartitionData(X, NodePositions, 100000, XSquared)
 print(time.time()-t, "seconds")
+
 if nData < 100000 and dim == 2:
     A = [None] * nNodes
     color = ['c', 'r', 'b', 'g', 'y', 'm', 'k']

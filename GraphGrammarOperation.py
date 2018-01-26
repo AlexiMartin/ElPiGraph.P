@@ -90,7 +90,6 @@ def AddNode2Node(X, NodePositions, ElasticMatrix, partition):
             NewNodePosition = 2*NodePositions[i, ]-NodePositions[ineighbour, ]
             # Complete Elasticity Matrix
             ElasticMatrices[i, i, i] = Mus[ineighbour]
-
         else:
             # Add node to a star
             # if 0 data points associated with this star

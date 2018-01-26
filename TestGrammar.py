@@ -6,7 +6,6 @@ Created on Fri Jan 19 15:43:23 2018
 """
 
 import numpy as np
-import scipy as sp
 from TestData import graph
 from ApplyOptimalGraphGrammarOperation import ApplyOptimalGraphGrammarOperation
 import matplotlib.pyplot as plt
@@ -14,7 +13,7 @@ import matplotlib.pyplot as plt
 
 def printMatrix(mat):
     Mus = mat.diagonal().copy()
-    mat[np.diag(Mus > 0)] = 0.2
+    mat[np.diag(Mus > 0)] = 0.1
     plt.imshow(mat)
     np.fill_diagonal(mat, Mus)
     plt.show()
@@ -29,11 +28,11 @@ def printMatrices(ElasticMatrices, ElasticMatrix=None):
         printMatrix(ElasticMatrices[:, :, i])
 
 
-def line2Data(filename, dispPrev=False):
-    ElasticMatrix = np.array([[0, 0.01, 0],
-                              [0.01, 0.05, 0.01],
-                              [0, 0.01, 0]])
-    """
+def represent2Ddata(filename, dispPrev=False):
+    ElasticMatrix = (# np.array([[0.0, 0.01, 0],
+                              #[0.01, 0.1, 0.01],
+                              #[0, 0.01, 0]])
+
     np.array(
             [[0.0, 0.1, 0.0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
              [0.1, 0.01, 0.1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -48,8 +47,8 @@ def line2Data(filename, dispPrev=False):
              [0, 0, 0, 0, 0, 0, 0, 0, 0, 0.1, 0.01, 0.1, 0, 0],
              [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.1, 0.01, 0.1, 0],
              [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.1, 0.01, 0.1],
-             [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.0, 0.10, 0.0]])
-    """
+             [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.0, 0.10, 0.0]]))
+
     X = np.array([[0, 1]])
     with open(filename) as F:
         for line in F:
@@ -59,50 +58,23 @@ def line2Data(filename, dispPrev=False):
     NodePositions = X[np.random.choice(X.shape[0], ElasticMatrix.shape[0]), ]
     if dispPrev:
         graph(X, NodePositions, ElasticMatrix.shape[0])
-    op = np.array([["addnode2node", "bisectedge"]])
+    op = np.array(["addnode2node", "bisectedge"])
     op2 = np.array(["removenode", "shrinkedge"])
-    for i in range(27):
+    for i in range(15):
         print("Computing operation ", i+1)
         NodePositions, ElasticMatrix, partition, dists = (
             ApplyOptimalGraphGrammarOperation(X, NodePositions, ElasticMatrix,
-                                              op[0]))
+                                              op))
         NodePositions, ElasticMatrix, partition, dists = (
             ApplyOptimalGraphGrammarOperation(X, NodePositions, ElasticMatrix,
                                               op2))
         NodePositions, ElasticMatrix, partition, dists = (
             ApplyOptimalGraphGrammarOperation(X, NodePositions, ElasticMatrix,
-                                              op[0]))
+                                              op))
         graph(X, NodePositions, ElasticMatrix.shape[0])
         plt.show()
     printMatrix(ElasticMatrix)
     return X, NodePositions, ElasticMatrix.shape[0]
 
 
-"""
-nData = 1000
-dim = 2
-nNodes = 12
-X = sp.rand(nData, dim)
-ind = np.random.choice(nData, nNodes)
-NodePositions = X[ind, ]
-# print(NodePositions)
-ElasticMatrix = np.array(
-    [[0.00, 0.00, 0.10, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00],
-     [0.00, 0.00, 0.10, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00],
-     [0.10, 0.10, 0.01, 0.00, 0.00, 0.00, 0.00, 0.10, 0.00, 0.00, 0.00, 0.00],
-     [0.00, 0.00, 0.00, 0.00, 0.00, 0.10, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00],
-     [0.00, 0.00, 0.00, 0.00, 0.00, 0.10, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00],
-     [0.00, 0.00, 0.00, 0.10, 0.10, 0.01, 0.10, 0.10, 0.00, 0.00, 0.00, 0.00],
-     [0.00, 0.00, 0.00, 0.00, 0.00, 0.10, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00],
-     [0.00, 0.00, 0.10, 0.00, 0.00, 0.10, 0.00, 0.01, 0.00, 0.00, 0.00, 0.00],
-     [0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.10, 0.00],
-     [0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.10, 0.00],
-     [0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.10, 0.10, 0.01, 0.10],
-     [0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.10, 0.00]])
-XSquared = np.ndarray.reshape((X**2).sum(axis=1), (nData, 1))
-part, dists = PartitionData(X, NodePositions, 100000, XSquared)
-op = ["addnode2node", "bisectedge"]
-op2 = ["removenode", "shrinkedge"]
-print(NodePositions)
-"""
-graph(*line2Data("tree23.data"))
+graph(*represent2Ddata("test_data/tree23.data"))
