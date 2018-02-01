@@ -4,13 +4,13 @@ Created on Wed Jan 17 10:45:02 2018
 
 @author: Alexis Martin
 """
-from PrimitiveElasticGraphEmbedment import PrimitiveElasticGraphEmbedment
+from core_algorithm.PrimitiveElasticGraphEmbedment import PrimitiveElasticGraphEmbedment
 import matplotlib.pyplot as plt
 import numpy as np
 
 
 # represents the tree on the datapoints
-def graph(X, NodePositions, nNodes, partition=None, col=None, size=5):
+def graph(X, NodePositions, nNodes, partition=None, col=None, size=8):
     A = [None] * nNodes
     if col is None:
         col = ['c', 'r', 'b', 'g', 'y', 'm', 'k']

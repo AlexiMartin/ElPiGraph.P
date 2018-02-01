@@ -5,9 +5,8 @@ Created on Mon Jan  8 13:52:31 2018
 @author: Alexis Martin
 """
 import numpy as np
-import math
-import ComputePrimitiveGraphElasticEnergy as CG
-from PartitionData import PartitionData
+import core_algorithm.ComputePrimitiveGraphElasticEnergy as CG
+from core_algorithm.PartitionData import PartitionData
 
 
 # This is the core function for fitting a primitive elastic graph to the data
@@ -50,7 +49,7 @@ from PartitionData import PartitionData
 def PrimitiveElasticGraphEmbedment(X, NodePositions, ElasticMatrix,
                                    MaxNumberOfIterations=10, eps=0.01,
                                    PointWeights=None, MaxBlockSize=100000,
-                                   verbose=False, TrimmingRadius=math.inf,
+                                   verbose=False, TrimmingRadius=np.inf,
                                    SquaredX=None):
     N = X.shape[0]
     if PointWeights is None:

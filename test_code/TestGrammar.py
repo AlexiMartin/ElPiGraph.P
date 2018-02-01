@@ -6,12 +6,14 @@ Created on Fri Jan 19 15:43:23 2018
 """
 
 import numpy as np
-from TestData import graph
-from ApplyOptimalGraphGrammarOperation import ApplyOptimalGraphGrammarOperation
+from test_code.TestData import graph
+from core_algorithm.ElPrincGraph import ElPrincGraph
 import matplotlib.pyplot as plt
+# import scipy as sp
 
 
-def printMatrix(mat):
+def printMatrix(mat, size):
+    plt.figure(figsize=(size, size))
     Mus = mat.diagonal().copy()
     mat[np.diag(Mus > 0)] = 0.1
     plt.imshow(mat)
@@ -19,20 +21,20 @@ def printMatrix(mat):
     plt.show()
 
 
-def printMatrices(ElasticMatrices, ElasticMatrix=None):
+def printMatrices(ElasticMatrices, ElasticMatrix=None, size=8):
     if ElasticMatrix is not None:
         print("Start : ")
-        printMatrix(ElasticMatrix)
+        printMatrix(ElasticMatrix, size)
         print("-------------------")
     for i in range(ElasticMatrices.shape[2]):
-        printMatrix(ElasticMatrices[:, :, i])
+        printMatrix(ElasticMatrices[:, :, i], size)
 
 
 def represent2Ddata(filename, dispPrev=False):
-    ElasticMatrix = (# np.array([[0.0, 0.01, 0],
-                              #[0.01, 0.1, 0.01],
-                              #[0, 0.01, 0]])
-
+    ElasticMatrix = (np.array([[0.0, 0.01, 0],
+                               [0.01, 0.1, 0.01],
+                               [0, 0.01, 0]]))
+    """
     np.array(
             [[0.0, 0.1, 0.0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
              [0.1, 0.01, 0.1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -48,7 +50,7 @@ def represent2Ddata(filename, dispPrev=False):
              [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.1, 0.01, 0.1, 0],
              [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.1, 0.01, 0.1],
              [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0.0, 0.10, 0.0]]))
-
+    """
     X = np.array([[0, 1]])
     with open(filename) as F:
         for line in F:
@@ -58,8 +60,10 @@ def represent2Ddata(filename, dispPrev=False):
     NodePositions = X[np.random.choice(X.shape[0], ElasticMatrix.shape[0]), ]
     if dispPrev:
         graph(X, NodePositions, ElasticMatrix.shape[0])
-    op = np.array(["addnode2node", "bisectedge"])
-    op2 = np.array(["removenode", "shrinkedge"])
+    op = np.array([["addnode2node", "bisectedge"],
+                   ["bisectedge", "addnode2node"]])
+    op2 = np.array([["removenode", "shrinkedge"]])
+    """
     for i in range(15):
         print("Computing operation ", i+1)
         NodePositions, ElasticMatrix, partition, dists = (
@@ -73,8 +77,11 @@ def represent2Ddata(filename, dispPrev=False):
                                               op))
         graph(X, NodePositions, ElasticMatrix.shape[0])
         plt.show()
-    printMatrix(ElasticMatrix)
+    """
+    NodePositions, ElasticMatrix = ElPrincGraph(X, 75, 0.1, 0.01, verbose=False)
+
+    printMatrix(ElasticMatrix, 8)
     return X, NodePositions, ElasticMatrix.shape[0]
+    
 
-
-graph(*represent2Ddata("test_data/tree23.data"))
+graph(*represent2Ddata("test_data/cells.data"))

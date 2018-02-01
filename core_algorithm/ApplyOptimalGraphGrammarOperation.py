@@ -4,9 +4,9 @@ Created on Mon Jan 22 11:02:30 2018
 
 @author: Alexis Martin
 """
-from PartitionData import PartitionData
-from GraphGrammarOperation import GraphGrammarOperation
-from PrimitiveElasticGraphEmbedment import PrimitiveElasticGraphEmbedment
+from core_algorithm.PartitionData import PartitionData
+from core_algorithm.GraphGrammarOperation import GraphGrammarOperation
+from core_algorithm.PrimitiveElasticGraphEmbedment import PrimitiveElasticGraphEmbedment
 import numpy as np
 
 
