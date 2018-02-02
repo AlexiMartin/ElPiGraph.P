@@ -60,8 +60,8 @@ def represent2Ddata(filename, dispPrev=False):
     NodePositions = X[np.random.choice(X.shape[0], ElasticMatrix.shape[0]), ]
     if dispPrev:
         graph(X, NodePositions, ElasticMatrix.shape[0])
-    op = np.array([["addnode2node", "bisectedge"],
-                   ["bisectedge", "addnode2node"]])
+    op = np.array([["bisectedge"],
+                   ["bisectedge"]])
     op2 = np.array([["removenode", "shrinkedge"]])
     """
     for i in range(15):
@@ -78,10 +78,10 @@ def represent2Ddata(filename, dispPrev=False):
         graph(X, NodePositions, ElasticMatrix.shape[0])
         plt.show()
     """
-    NodePositions, ElasticMatrix = ElPrincGraph(X, 75, 0.1, 0.01, verbose=False)
+    NodePositions, ElasticMatrix = ElPrincGraph(X, 50, 0.01, 0.1, verbose=False)
 
     printMatrix(ElasticMatrix, 8)
     return X, NodePositions, ElasticMatrix.shape[0]
     
 
-graph(*represent2Ddata("test_data/cells.data"))
+graph(*represent2Ddata("test_code/test_data/cells.data"))
