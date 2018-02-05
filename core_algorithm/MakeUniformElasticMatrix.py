@@ -10,10 +10,9 @@ import numpy as np
 def MakeUniformElasticMatrix(Edges, Lambda, Mu):
     NumberOfNodes = Edges.max()+1
     ElasticMatrix = np.zeros((NumberOfNodes, NumberOfNodes))
-    ind = Edges[:, 0]+1 + (Edges[:, 1]-1)*ElasticMatrix.shape[0]
-    ElasticMatrix[np.unravel_index(ind, (ElasticMatrix.shape[0],
-                                         ElasticMatrix.shape[0]))] = Lambda
-    ElasticMatrix = ElasticMatrix + ElasticMatrix.T
+    for i in range(Edges.shape[0]):
+        ElasticMatrix[Edges[i][0], Edges[i][1]] = Lambda
+        ElasticMatrix[Edges[i][1], Edges[i][0]] = Lambda
     Connect = (ElasticMatrix > 0).sum(axis=0)
     ind = Connect > 1
     Mus = np.zeros((NumberOfNodes, 1))
