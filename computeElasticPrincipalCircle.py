@@ -6,21 +6,19 @@ Created on Mon Feb  5 13:46:32 2018
 """
 
 import computeElasticPrincipalGraph as EPG
+from PCAView import PCA
 import numpy as np
-import matplotlib.pyplot as plt
 
 
 def computeElasticPrincipalCircle(data, NumNodes, newDim=None,
                                   drawPCAview=True,
                                   drawAccuracyComplexity=True, drawEnergy=True,
-                                  Lambda=0.01, Mu=0.1, InitNodeP=None,
-                                  InitEdges=None, growGrammar=None,
-                                  shrinkGrammar=None, ComputeMSEP=False,
+                                  Lambda=0.01, Mu=0.1, ComputeMSEP=False,
                                   MaxBlockSize=100000, TrimmingRadius=np.inf,
                                   MaxNumberOfIterations=10, eps=0.01,
                                   verbose=True):
     NodeP = np.zeros((4, data.shape[1]))
-    v, u, s = EPG.PCA(data)
+    v, u, s = PCA(data)
     mn = data.mean(axis=0)
     v1 = v[:, 0]/np.linalg.norm(v[:, 0])
     v2 = v[:, 1]/np.linalg.norm(v[:, 1])
@@ -41,9 +39,3 @@ def computeElasticPrincipalCircle(data, NumNodes, newDim=None,
                                             MaxBlockSize, TrimmingRadius,
                                             MaxNumberOfIterations, eps,
                                             verbose)
-
-
-X = np.loadtxt("test_code/test_data/iris.data")
-plt.scatter(*zip(*X[:, 0:2]))
-plt.show()
-print(computeElasticPrincipalCircle(X, 50, verbose=False)[1].shape)
